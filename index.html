@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f3ef">
+  <title>Quick Quiz | General Knowledge</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #242522;
+      background: #f4f3ef;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 20px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(ellipse at 15% 10%, rgba(245, 205, 139, .25), transparent 32%),
+        radial-gradient(ellipse at 90% 90%, rgba(156, 191, 171, .2), transparent 35%),
+        #f4f3ef;
+    }
+
+    button { font: inherit; }
+
+    .quiz {
+      width: min(100%, 620px);
+      padding: clamp(24px, 6vw, 48px);
+      border: 1px solid rgba(36, 37, 34, .08);
+      border-radius: 24px;
+      background: #fffefa;
+      box-shadow: 0 24px 70px rgba(39, 39, 32, .1);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #687c65;
+      font-size: .76rem;
+      font-weight: 750;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 3rem);
+      letter-spacing: -.055em;
+      line-height: 1.05;
+    }
+
+    .intro {
+      margin: 14px 0 30px;
+      color: #73746e;
+      line-height: 1.6;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      color: #73746e;
+      font-size: .88rem;
+      font-weight: 650;
+    }
+
+    .progress-track {
+      height: 7px;
+      overflow: hidden;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      background: #eeeee8;
+    }
+
+    .progress {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: #68836a;
+      transition: width .25s ease;
+    }
+
+    .question {
+      margin: 0 0 20px;
+      font-size: clamp(1.2rem, 4vw, 1.5rem);
+      letter-spacing: -.025em;
+      line-height: 1.4;
+    }
+
+    .answers {
+      display: grid;
+      gap: 11px;
+    }
+
+    .answer {
+      width: 100%;
+      padding: 15px 17px;
+      border: 1px solid #e6e5dd;
+      border-radius: 13px;
+      color: #343530;
+      background: #fffefa;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+    }
+
+    .answer:hover:not(:disabled), .answer:focus-visible {
+      border-color: #8da18a;
+      background: #f6f8f3;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .answer:disabled { cursor: default; }
+    .answer.correct { border-color: #7eaa7d; background: #edf6eb; }
+    .answer.incorrect { border-color: #d99587; background: #fbefec; }
+
+    .feedback {
+      min-height: 26px;
+      margin: 18px 0 8px;
+      color: #687c65;
+      font-size: .94rem;
+      font-weight: 650;
+      line-height: 1.5;
+    }
+
+    .feedback.wrong { color: #a65346; }
+
+    .next, .restart {
+      min-height: 48px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 12px;
+      color: white;
+      background: #354b39;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    .next:hover, .restart:hover { background: #26392a; transform: translateY(-1px); }
+    .next:focus-visible, .restart:focus-visible { outline: 3px solid #a9c4a5; outline-offset: 3px; }
+    .next[hidden], .restart[hidden] { display: none; }
+
+    .result {
+      padding: 26px 0 6px;
+      text-align: center;
+    }
+
+    .result-mark { margin: 0 0 12px; font-size: 3rem; }
+    .result h2 { margin: 0; font-size: 2rem; letter-spacing: -.04em; }
+    .result-copy { margin: 12px 0 24px; color: #73746e; line-height: 1.6; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="quiz" aria-labelledby="title">
+    <p class="eyebrow">A little brain break</p>
+    <h1 id="title">Quick Quiz</h1>
+    <p class="intro">Five questions, a few surprising facts, and no pressure. How much do you know?</p>
+
+    <section id="game" aria-label="Quiz">
+      <div class="status">
+        <span id="question-count">Question 1 of 5</span>
+        <span id="score">Score: 0</span>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+        <div class="progress" id="progress"></div>
+      </div>
+      <h2 class="question" id="question" tabindex="-1"></h2>
+      <div class="answers" id="answers"></div>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+      <button class="next" id="next" type="button" hidden>Next question</button>
+    </section>
+
+    <section class="result" id="result" aria-live="polite" hidden></section>
+  </main>
+
+  <script>
+    const questions = [
+      {
+        question: "Which planet has the most moons confirmed so far?",
+        answers: ["Jupiter", "Saturn", "Neptune", "Uranus"],
+        correct: 1,
+        fact: "Saturn currently leads the count of confirmed moons."
+      },
+      {
+        question: "What is the largest living structure on Earth?",
+        answers: ["The Amazon rainforest", "The Great Barrier Reef", "The Serengeti", "The redwood forest"],
+        correct: 1,
+        fact: "The Great Barrier Reef is so large it can be seen from space."
+      },
+      {
+        question: "Which element has the chemical symbol “Au”?",
+        answers: ["Silver", "Aluminum", "Gold", "Argon"],
+        correct: 2,
+        fact: "Au comes from the Latin word aurum, meaning gold."
+      },
+      {
+        question: "How many sides does a dodecagon have?",
+        answers: ["Ten", "Eleven", "Twelve", "Fourteen"],
+        correct: 2,
+        fact: "A dodecagon is a 12-sided polygon."
+      },
+      {
+        question: "Which ocean is the largest?",
+        answers: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+        correct: 3,
+        fact: "The Pacific Ocean covers more area than all Earth's land combined."
+      }
+    ];
+
+    const count = document.querySelector("#question-count");
+    const scoreLabel = document.querySelector("#score");
+    const progress = document.querySelector("#progress");
+    const progressTrack = document.querySelector(".progress-track");
+    const questionTitle = document.querySelector("#question");
+    const answers = document.querySelector("#answers");
+    const feedback = document.querySelector("#feedback");
+    const nextButton = document.querySelector("#next");
+    const game = document.querySelector("#game");
+    const result = document.querySelector("#result");
+    let current = 0;
+    let score = 0;
+
+    function renderQuestion() {
+      const item = questions[current];
+      count.textContent = `Question ${current + 1} of ${questions.length}`;
+      scoreLabel.textContent = `Score: ${score}`;
+      progress.style.width = `${(current / questions.length) * 100}%`;
+      progressTrack.setAttribute("aria-valuenow", String(current));
+      questionTitle.textContent = item.question;
+      feedback.textContent = "";
+      feedback.classList.remove("wrong");
+      nextButton.hidden = true;
+      nextButton.textContent = current === questions.length - 1 ? "See my results" : "Next question";
+      answers.replaceChildren();
+
+      item.answers.forEach((answer, index) => {
+        const button = document.createElement("button");
+        button.className = "answer";
+        button.type = "button";
+        button.textContent = answer;
+        button.addEventListener("click", () => chooseAnswer(index));
+        answers.append(button);
+      });
+    }
+
+    function chooseAnswer(selected) {
+      const item = questions[current];
+      const answerButtons = answers.querySelectorAll("button");
+      answerButtons.forEach((button, index) => {
+        button.disabled = true;
+        if (index === item.correct) button.classList.add("correct");
+      });
+
+      if (selected === item.correct) {
+        score += 1;
+        scoreLabel.textContent = `Score: ${score}`;
+        feedback.textContent = `That's right! ${item.fact}`;
+      } else {
+        answerButtons[selected].classList.add("incorrect");
+        feedback.textContent = `Not quite. ${item.fact}`;
+        feedback.classList.add("wrong");
+      }
+      nextButton.hidden = false;
+      nextButton.focus();
+    }
+
+    function showResults() {
+      game.hidden = true;
+      const message = score === questions.length
+        ? "Perfect score. You really know your stuff!"
+        : score >= 3
+          ? "Nicely done! You learned a thing or two."
+          : "Good start. Give it another go and beat your score.";
+      result.innerHTML = `
+        <p class="result-mark" aria-hidden="true">${score === questions.length ? "🏆" : "✨"}</p>
+        <h2>You scored ${score} out of ${questions.length}</h2>
+        <p class="result-copy">${message}</p>
+        <button class="restart" type="button">Play again</button>
+      `;
+      result.hidden = false;
+      result.querySelector(".restart").addEventListener("click", restart);
+      result.querySelector(".restart").focus();
+      progress.style.width = "100%";
+      progressTrack.setAttribute("aria-valuenow", String(questions.length));
+      count.textContent = "Quiz complete";
+    }
+
+    function restart() {
+      current = 0;
+      score = 0;
+      result.hidden = true;
+      game.hidden = false;
+      renderQuestion();
+      questionTitle.focus();
+    }
+
+    nextButton.addEventListener("click", () => {
+      if (current === questions.length - 1) {
+        showResults();
+        return;
+      }
+      current += 1;
+      renderQuestion();
+      questionTitle.focus();
+    });
+
+    renderQuestion();
+  </script>
+</body>
+</html>
